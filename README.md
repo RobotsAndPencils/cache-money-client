@@ -9,14 +9,16 @@ For use with GitHub Actions, add a step to install the caching tool and wrap the
   run: |
     go get github.com/RobotsAndPencils/cache-money-client
     /home/runner/go/bin/cache-money-client restore
-    # npm install
+    npm install
     /home/runner/go/bin/cache-money-client store
   env:
-    cache_key: v1-{{ checksum "package-lock.json" }}
-    cache_path: node_modules
-    token: ${{ secrets.TOKEN }}
-    endpoint: https://{{host}}/api
+    CACHE_KEY: v1-{{ checksum "package-lock.json" }}-${{ runner.os }}
+    CACHE_PATH: node_modules
+    ENDPOINT: https://{{host}}/api
+    TOKEN: ${{ secrets.TOKEN }}
 ```
+
+TODO: release static binaries for each operating system
 
 ## Server
 
