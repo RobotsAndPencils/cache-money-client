@@ -2,24 +2,18 @@
 
 ## Usage
 
-For use with GitHub Actions, add a step to install the caching tool:
-
-```
-- name: Install caching tool
-  run: go get github.com/RobotsAndPencils/cache-money-client
-```
-
-And wrap installation with a commands to store and restore the cache:
+For use with GitHub Actions, add a step to install the caching tool and wrap the desired command to store and restore the cache:
 
 ```
 - name: Install dependencies
   run: |
-    cache restore
-    npm install
-    cache store
-  with:
-    key: v1-{{ checksum "package-lock.json" }}
-    path: node_modules
+    go get github.com/RobotsAndPencils/cache-money-client
+    /home/runner/go/bin/cache-money-client restore
+    # npm install
+    /home/runner/go/bin/cache-money-client store
+  env:
+    cache_key: v1-{{ checksum "package-lock.json" }}
+    cache_path: node_modules
     token: ${{ secrets.TOKEN }}
     endpoint: https://{{host}}/api
 ```
