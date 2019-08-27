@@ -22,15 +22,19 @@ TODO: release static binaries for each operating system
 
 ## Server
 
-Cache Money client communicates with a REST-based server with the following APIs.
+Cache Money client communicates with a REST-based server with the following API.
 
 ### Authorization header for all requests
 
-Header: `Authorization: {{token}}`
+Header:
+
+- `Authorization: {{token}}`
 
 ### Check if key exists in the cache
 
 `HEAD {{endpoint}}/{{key}}`
+
+Status:
 
 - 204 No content
 - 404 Not found
@@ -40,7 +44,12 @@ Header: `Authorization: {{token}}`
 
 `PUT {{endpoint}}/{{key}}`
 
-Header: `Content-Type: application/zip`
+Headers:
+
+- `Content-Type: application/zip`
+- `Content-Length: 123`
+
+Status:
 
 - 200 OK
 - 500 Internal server error
@@ -48,6 +57,8 @@ Header: `Content-Type: application/zip`
 ### Download a file from the cache
 
 `GET {{endpoint}}/{{key}}`
+
+Status:
 
 - 200 OK
 - 404 Not found
