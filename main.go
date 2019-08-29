@@ -2,10 +2,13 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/RobotsAndPencils/cache-money-client/cache"
 )
+
+var logger = log.New(os.Stderr, "", 0)
 
 func main() {
 	if len(os.Args) < 2 || (os.Args[1] != "store" && os.Args[1] != "restore") {
@@ -34,24 +37,24 @@ func main() {
 		err = cache.Restore(client, key, cachePath)
 	}
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "warn: %v\n", err)
+		logger.Printf("warn: %v\n", err)
 	}
 }
 
 func helpText() {
-	fmt.Fprintln(os.Stderr, "cache [store|restore]")
-	fmt.Fprintln(os.Stderr, "\nRequired environment variables:")
-	fmt.Fprintln(os.Stderr, "  CACHE_KEY={{identifier for the cache}}")
-	fmt.Fprintln(os.Stderr, "  CACHE_PATH={{file path to cache}}")
-	fmt.Fprintln(os.Stderr, "  TOKEN={{authorization token}}")
-	fmt.Fprintln(os.Stderr, "  ENDPOINT={{server url}}")
-	fmt.Fprintln(os.Stderr)
+	logger.Println("cache [store|restore]")
+	logger.Println("\nRequired environment variables:")
+	logger.Println("  CACHE_KEY={{identifier for the cache}}")
+	logger.Println("  CACHE_PATH={{file path to cache}}")
+	logger.Println("  TOKEN={{authorization token}}")
+	logger.Println("  ENDPOINT={{server url}}")
+	logger.Println()
 }
 
 func failOnError(err error) {
 	if err != nil {
 		helpText()
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		logger.Printf("error: %v\n", err)
 		os.Exit(1)
 	}
 }
