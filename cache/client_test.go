@@ -48,7 +48,6 @@ func TestInvalidEndpoint(t *testing.T) {
 func TestCheck404(t *testing.T) {
 	const key = "1234"
 
-	var called bool
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "HEAD" {
 			t.Errorf("expected HEAD request, got %q", r.Method)
@@ -61,7 +60,6 @@ func TestCheck404(t *testing.T) {
 			t.Errorf("expected Authorization header %q, got %q", Token, auth)
 		}
 		w.WriteHeader(404)
-		called = true
 	}))
 	defer ts.Close()
 
@@ -75,9 +73,6 @@ func TestCheck404(t *testing.T) {
 	}
 	if exists {
 		t.Error("expected check to return false, got true")
-	}
-	if !called {
-		t.Error("test server did not receive a request")
 	}
 }
 
@@ -105,7 +100,6 @@ func TestPush(t *testing.T) {
 	const content = "These pretzels are making me thirsty."
 	const mimeType = "text/plain"
 
-	var called bool
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "PUT" {
 			t.Errorf("expected PUT request, got %q", r.Method)
@@ -134,7 +128,6 @@ func TestPush(t *testing.T) {
 			t.Errorf("expected body %q, got %q", content, b)
 		}
 		w.WriteHeader(200)
-		called = true
 	}))
 	defer ts.Close()
 
@@ -145,10 +138,6 @@ func TestPush(t *testing.T) {
 	err = client.Push(key, mimeType, bytes.NewBufferString(content))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
-	}
-
-	if !called {
-		t.Error("test server did not receive a request")
 	}
 }
 
@@ -176,7 +165,6 @@ func TestFetch(t *testing.T) {
 	const key = "1234"
 	const content = "These pretzels are making me thirsty."
 
-	var called bool
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" {
 			t.Errorf("expected GET request, got %q", r.Method)
@@ -189,7 +177,6 @@ func TestFetch(t *testing.T) {
 			t.Errorf("expected Authorization header %q, got %q", Token, auth)
 		}
 		io.WriteString(w, content)
-		called = true
 	}))
 	defer ts.Close()
 
@@ -204,10 +191,6 @@ func TestFetch(t *testing.T) {
 	}
 	if b.String() != content {
 		t.Errorf("expected body %q, got %q", content, b.String())
-	}
-
-	if !called {
-		t.Error("test server did not receive a request")
 	}
 }
 
