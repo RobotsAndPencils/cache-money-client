@@ -39,14 +39,10 @@ func NewClient(token, endpoint string) (*Client, error) {
 	}, nil
 }
 
-// Check if key exists in the cache
+// Check if key exists in the cache server
 func (c *Client) Check(key string) (bool, error) {
-	u, err := url.Parse(c.endpoint)
-	if err != nil {
-		return false, err
-	}
-	u.Path = path.Join(u.Path, key)
-	req, err := http.NewRequest("HEAD", u.String(), nil)
+	URL := c.buildURL(key)
+	req, err := http.NewRequest("HEAD", URL, nil)
 	if err != nil {
 		return false, err
 	}
@@ -69,12 +65,38 @@ func (c *Client) Check(key string) (bool, error) {
 	}
 }
 
-// Upload data to the cache
-func (c *Client) Upload(key string, r io.Reader) error {
+// Upload data to the cache server
+func (c *Client) Upload(key, mimeType string, r io.Reader) error {
+	URL := c.buildURL(key)
+	req, err := http.NewRequest("PUT", URL, r)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Authorization", c.token)
+	req.Header.Set("Content-Type", mimeType)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("%v %v", resp.StatusCode, resp.Status)
+	}
 	return nil
 }
 
-// Download data from the cache
+// Download data from the cache server
 func (c *Client) Download(key string, w io.Writer) error {
 	return nil
+}
+
+func (c *Client) buildURL(key string) string {
+	// URL already validated in NewClient so won't error here
+	// Parsing URL again to avoid mutating c.endpoint
+	u, _ := url.Parse(c.endpoint)
+	u.Path = path.Join(u.Path, key)
+	return u.String()
 }
