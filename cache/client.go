@@ -2,14 +2,17 @@ package cache
 
 import (
 	"errors"
+	"fmt"
 	"io"
+	"net/http"
 	"net/url"
+	"path"
 )
 
 // Client for cache money server API
 type Client struct {
 	token    string
-	endpoint *url.URL
+	endpoint string
 }
 
 // Errors
@@ -32,13 +35,38 @@ func NewClient(token, endpoint string) (*Client, error) {
 	}
 	return &Client{
 		token:    token,
-		endpoint: u,
+		endpoint: u.String(),
 	}, nil
 }
 
 // Check if key exists in the cache
 func (c *Client) Check(key string) (bool, error) {
-	return false, nil
+	u, err := url.Parse(c.endpoint)
+	if err != nil {
+		return false, err
+	}
+	u.Path = path.Join(u.Path, key)
+	req, err := http.NewRequest("HEAD", u.String(), nil)
+	if err != nil {
+		return false, err
+	}
+	req.Header.Set("Authorization", c.token)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200, 204:
+		return true, nil
+	case 404:
+		return false, nil
+	default:
+		return false, fmt.Errorf("%v %v", resp.StatusCode, resp.Status)
+	}
 }
 
 // Upload data to the cache
