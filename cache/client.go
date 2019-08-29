@@ -65,8 +65,8 @@ func (c *Client) Check(key string) (bool, error) {
 	}
 }
 
-// Upload data to the cache server
-func (c *Client) Upload(key, mimeType string, r io.Reader) error {
+// Push data to the cache server
+func (c *Client) Push(key, mimeType string, r io.Reader) error {
 	URL := c.buildURL(key)
 	req, err := http.NewRequest("PUT", URL, r)
 	if err != nil {
@@ -83,13 +83,13 @@ func (c *Client) Upload(key, mimeType string, r io.Reader) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("%v %v", resp.StatusCode, resp.Status)
+		return fmt.Errorf("%v %v while pushing %v", resp.StatusCode, resp.Status, key)
 	}
 	return nil
 }
 
-// Download data from the cache server
-func (c *Client) Download(key string, w io.Writer) error {
+// Fetch data from the cache server
+func (c *Client) Fetch(key string, w io.Writer) error {
 	URL := c.buildURL(key)
 	req, err := http.NewRequest("GET", URL, nil)
 	if err != nil {
@@ -104,8 +104,10 @@ func (c *Client) Download(key string, w io.Writer) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("%v %v", resp.StatusCode, resp.Status)
+	if resp.StatusCode == 404 {
+		return fmt.Errorf("%v not found in cache", key)
+	} else if resp.StatusCode != 200 {
+		return fmt.Errorf("%v %v while fetching %v", resp.StatusCode, resp.Status, key)
 	}
 
 	_, err = io.Copy(w, resp.Body)

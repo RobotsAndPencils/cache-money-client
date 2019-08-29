@@ -100,10 +100,10 @@ func TestCheck204(t *testing.T) {
 	}
 }
 
-func TestUpload(t *testing.T) {
+func TestPush(t *testing.T) {
 	const key = "1234"
 	const content = "These pretzels are making me thirsty."
-	const mimeType = "plain/text"
+	const mimeType = "text/plain"
 
 	var called bool
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -142,7 +142,7 @@ func TestUpload(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	err = client.Upload(key, mimeType, bytes.NewBufferString(content))
+	err = client.Push(key, mimeType, bytes.NewBufferString(content))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -152,10 +152,10 @@ func TestUpload(t *testing.T) {
 	}
 }
 
-func TestUploadFails(t *testing.T) {
+func TestPushFails(t *testing.T) {
 	const key = "1234"
 	const content = "These pretzels are making me thirsty."
-	const mimeType = "plain/text"
+	const mimeType = "text/plain"
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(500)
@@ -166,13 +166,13 @@ func TestUploadFails(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	err = client.Upload(key, mimeType, bytes.NewBufferString(content))
+	err = client.Push(key, mimeType, bytes.NewBufferString(content))
 	if err == nil {
 		t.Fatal("expected error, got none")
 	}
 }
 
-func TestDownload(t *testing.T) {
+func TestFetch(t *testing.T) {
 	const key = "1234"
 	const content = "These pretzels are making me thirsty."
 
@@ -198,7 +198,7 @@ func TestDownload(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	var b bytes.Buffer
-	err = client.Download(key, &b)
+	err = client.Fetch(key, &b)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -211,7 +211,7 @@ func TestDownload(t *testing.T) {
 	}
 }
 
-func TestDownloadFails(t *testing.T) {
+func TestFetchFails(t *testing.T) {
 	const key = "1234"
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -224,7 +224,7 @@ func TestDownloadFails(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	var b bytes.Buffer
-	err = client.Download(key, &b)
+	err = client.Fetch(key, &b)
 	if err == nil {
 		t.Fatal("expected error, got none")
 	}
