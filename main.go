@@ -24,14 +24,12 @@ func main() {
 	client, err := cache.NewClient(token, endpoint)
 	failOnError(err)
 
-	err = cache.VerifyPath(cachePath)
-	failOnError(err)
-
 	key, err := cache.EvaluateKey(cacheKey)
 	failOnError(err)
 
 	switch action {
 	case "store":
+		failOnError(cache.VerifyPath(cachePath))
 		err = cache.Store(client, key, cachePath)
 	case "restore":
 		err = cache.Restore(client, key, cachePath)

@@ -18,8 +18,8 @@ func TestSimpleKey(t *testing.T) {
 }
 
 func TestChecksumKey(t *testing.T) {
-	input := `v1-{{ checksum "fixtures/go.mod" }}`
-	expected := "v1-60c4db30a8f6532d56c9aca1b2aa39d6"
+	input := `v1-{{ checksum "testdata/go.mod" }}`
+	expected := "v1-f0459a152756210aae0a9b90f77cfdaf"
 
 	output, err := cache.EvaluateKey(input)
 	if err != nil {
@@ -31,7 +31,7 @@ func TestChecksumKey(t *testing.T) {
 }
 
 func TestChecksumFileNotFound(t *testing.T) {
-	input := `v1-{{ checksum "fixtures/nofile.lock" }}`
+	input := `v1-{{ checksum "testdata/nofile.lock" }}`
 	_, err := cache.EvaluateKey(input)
 	if err == nil {
 		t.Error("expected error, got none")

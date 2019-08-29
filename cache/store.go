@@ -31,13 +31,13 @@ func Store(client *Client, key, path string) error {
 	if err != nil {
 		return err
 	}
-	logger.Printf("Compressing %v", path)
 	defer func() {
 		tmpfile.Close()
 		os.Remove(tmpfile.Name())
 	}()
 
 	// compress path
+	logger.Printf("Compressing %v", path)
 	err = compress(path, tmpfile)
 	if err != nil {
 		return err
