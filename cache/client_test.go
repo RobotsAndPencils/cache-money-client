@@ -2,6 +2,7 @@ package cache_test
 
 import (
 	"bytes"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -12,33 +13,33 @@ import (
 )
 
 const (
-	token    = "abcd1234"
-	endpoint = "https://cache-money.dev/api"
+	Token    = "abcd1234"
+	Endpoint = "https://cache-money.dev/api"
 )
 
 func TestValidClient(t *testing.T) {
-	_, err := cache.NewClient(token, endpoint)
+	_, err := cache.NewClient(Token, Endpoint)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
 
 func TestMissingToken(t *testing.T) {
-	_, err := cache.NewClient("", endpoint)
+	_, err := cache.NewClient("", Endpoint)
 	if err != cache.ErrInvalidToken {
 		t.Fatalf("Expected ErrInvalidToken, got %v", err)
 	}
 }
 
 func TestMissingEndpoint(t *testing.T) {
-	_, err := cache.NewClient(token, "")
+	_, err := cache.NewClient(Token, "")
 	if err != cache.ErrInvalidEndpoint {
 		t.Fatalf("Expected ErrInvalidEndpoint, got %v", err)
 	}
 }
 
 func TestInvalidEndpoint(t *testing.T) {
-	_, err := cache.NewClient(token, "localhost")
+	_, err := cache.NewClient(Token, "localhost")
 	if err != cache.ErrInvalidEndpoint {
 		t.Fatalf("Expected ErrInvalidEndpoint, got %v", err)
 	}
@@ -56,15 +57,15 @@ func TestCheck404(t *testing.T) {
 			t.Errorf("expected request path %q, got %q", "/"+key, r.URL.Path)
 		}
 		auth := r.Header.Get("Authorization")
-		if auth != token {
-			t.Errorf("expected Authorization header %q, got %q", token, auth)
+		if auth != Token {
+			t.Errorf("expected Authorization header %q, got %q", Token, auth)
 		}
 		w.WriteHeader(404)
 		called = true
 	}))
 	defer ts.Close()
 
-	client, err := cache.NewClient(token, ts.URL)
+	client, err := cache.NewClient(Token, ts.URL)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -86,7 +87,7 @@ func TestCheck204(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	client, err := cache.NewClient(token, ts.URL)
+	client, err := cache.NewClient(Token, ts.URL)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -113,8 +114,8 @@ func TestUpload(t *testing.T) {
 			t.Errorf("expected request path %q, got %q", "/"+key, r.URL.Path)
 		}
 		auth := r.Header.Get("Authorization")
-		if auth != token {
-			t.Errorf("expected Authorization header %q, got %q", token, auth)
+		if auth != Token {
+			t.Errorf("expected Authorization header %q, got %q", Token, auth)
 		}
 		length := r.Header.Get("Content-Length")
 		if length != strconv.Itoa(len(content)) {
@@ -137,7 +138,7 @@ func TestUpload(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	client, err := cache.NewClient(token, ts.URL)
+	client, err := cache.NewClient(Token, ts.URL)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -161,11 +162,69 @@ func TestUploadFails(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	client, err := cache.NewClient(token, ts.URL)
+	client, err := cache.NewClient(Token, ts.URL)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	err = client.Upload(key, mimeType, bytes.NewBufferString(content))
+	if err == nil {
+		t.Fatal("expected error, got none")
+	}
+}
+
+func TestDownload(t *testing.T) {
+	const key = "1234"
+	const content = "These pretzels are making me thirsty."
+
+	var called bool
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "GET" {
+			t.Errorf("expected GET request, got %q", r.Method)
+		}
+		if r.URL.Path != "/"+key {
+			t.Errorf("expected request path %q, got %q", "/"+key, r.URL.Path)
+		}
+		auth := r.Header.Get("Authorization")
+		if auth != Token {
+			t.Errorf("expected Authorization header %q, got %q", Token, auth)
+		}
+		io.WriteString(w, content)
+		called = true
+	}))
+	defer ts.Close()
+
+	client, err := cache.NewClient(Token, ts.URL)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	var b bytes.Buffer
+	err = client.Download(key, &b)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if b.String() != content {
+		t.Errorf("expected body %q, got %q", content, b.String())
+	}
+
+	if !called {
+		t.Error("test server did not receive a request")
+	}
+}
+
+func TestDownloadFails(t *testing.T) {
+	const key = "1234"
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(500)
+	}))
+	defer ts.Close()
+
+	client, err := cache.NewClient(Token, ts.URL)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	var b bytes.Buffer
+	err = client.Download(key, &b)
 	if err == nil {
 		t.Fatal("expected error, got none")
 	}

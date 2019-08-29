@@ -90,7 +90,26 @@ func (c *Client) Upload(key, mimeType string, r io.Reader) error {
 
 // Download data from the cache server
 func (c *Client) Download(key string, w io.Writer) error {
-	return nil
+	URL := c.buildURL(key)
+	req, err := http.NewRequest("GET", URL, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Authorization", c.token)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("%v %v", resp.StatusCode, resp.Status)
+	}
+
+	_, err = io.Copy(w, resp.Body)
+	return err
 }
 
 func (c *Client) buildURL(key string) string {
