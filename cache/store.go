@@ -54,6 +54,7 @@ func Store(client *Client, key, path string) error {
 
 func compress(root string, w io.Writer) error {
 	zw := zip.NewWriter(w)
+	// lastDir := ""
 	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -65,21 +66,41 @@ func compress(root string, w io.Writer) error {
 		if err != nil {
 			return err
 		}
-		// logger.Printf("  adding %v", rel)
+
+		// dir := filepath.Dir(rel)
+		// if dir != lastDir {
+		// 	logger.Printf("  adding %v", dir)
+		// 	lastDir = dir
+		// }
 
 		zf, err := zw.Create(rel)
 		if err != nil {
 			return err
 		}
+
+		if isSymlink(info) {
+			linkTarget, err := os.Readlink(path)
+			if err != nil {
+				return fmt.Errorf("compress symlink %v: %v", path, err)
+			}
+			_, err = zf.Write([]byte(filepath.ToSlash(linkTarget)))
+			return err
+		}
+
 		f, err := os.Open(path)
 		if err != nil {
 			return err
 		}
 		_, err = io.Copy(zf, f)
+		f.Close()
 		return err
 	})
 	if err != nil {
 		return err
 	}
 	return zw.Close()
+}
+
+func isSymlink(fi os.FileInfo) bool {
+	return fi.Mode()&os.ModeSymlink != 0
 }
