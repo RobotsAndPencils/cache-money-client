@@ -18,6 +18,7 @@ var logger = log.New(os.Stderr, "", 0)
 // Store a path to the cache
 func Store(client *Client, key, path string) error {
 	// check if key exists
+	logger.Printf("Checking %v", key)
 	exists, err := client.Check(key)
 	if err != nil {
 		return err
@@ -48,7 +49,7 @@ func Store(client *Client, key, path string) error {
 		return err
 	}
 
-	logger.Printf("Pushing %v", filepath.Base(tmpfile.Name()))
+	logger.Printf("Pushing %v", key)
 	return client.Push(key, mimeType, tmpfile)
 }
 
@@ -67,7 +68,7 @@ func compress(root string, w io.Writer) error {
 		if err != nil {
 			return err
 		}
-		logger.Printf("  adding %v", rel)
+		// logger.Printf("  adding %v", rel)
 
 		zf, err := zw.Create(rel)
 		if err != nil {

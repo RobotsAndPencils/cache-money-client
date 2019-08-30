@@ -17,7 +17,7 @@ func Restore(client *Client, key, path string) error {
 	}
 	defer os.Remove(tmpfile.Name())
 
-	logger.Printf("Fetching %v", filepath.Base(tmpfile.Name()))
+	logger.Printf("Fetching %v", key)
 	err = client.Fetch(key, tmpfile)
 	if err != nil {
 		tmpfile.Close()
@@ -35,7 +35,7 @@ func Restore(client *Client, key, path string) error {
 	defer zr.Close()
 
 	for _, zf := range zr.File {
-		logger.Printf("  writing %v", zf.Name)
+		// logger.Printf("  writing %v", zf.Name)
 		err := extract(zf, path)
 		if err != nil {
 			return err
