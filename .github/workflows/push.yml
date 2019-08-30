@@ -6,7 +6,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest]
+        # os: [ubuntu-latest, macOS-latest, windows-latest]
     steps:
       - name: Set up Go 1.12
         uses: actions/setup-go@v1
@@ -27,5 +28,5 @@ jobs:
         run: test -z "gofmt -s -l ."
       - name: Lint
         run: |
-          GOBIN=./bin go get -u golang.org/x/lint/golint
+          GOBIN=$PWD/bin go install golang.org/x/lint/golint
           ./bin/golint ./...
