@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 const mimeType = "application/zip"
@@ -59,9 +58,7 @@ func compress(root string, w io.Writer) error {
 		if err != nil {
 			return err
 		}
-		if info.IsDir() && strings.HasPrefix(info.Name(), ".") {
-			return filepath.SkipDir // ignore hidden folders like .bin and .cache
-		} else if info.IsDir() {
+		if info.IsDir() {
 			return nil
 		}
 		rel, err := filepath.Rel(root, path)
